@@ -56,6 +56,12 @@ LOCAL_CFLAGS += -DCAMCORDER_GRALLOC_SOURCE
 endif
 endif
 
+ifeq ($(BOARD_HAS_MTK_HARDWARE),true)
+ifeq ($(BOARD_USES_LEGACY_MTK_AV_BLOB),true)
+LOCAL_CFLAGS += -DUSE_LEGACY_MTK_AV_BLOB
+endif
+endif
+
 LOCAL_MODULE:= libstagefright_omx
 LOCAL_CFLAGS += -Werror -Wall
 # DOLBY_START

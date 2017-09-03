@@ -828,10 +828,19 @@ void CameraClient::dataCallback(int32_t msgType,
         const sp<IMemory>& dataPtr, camera_frame_metadata_t *metadata, void* user) {
     LOG2("dataCallback(%d)", msgType);
 
+    sp<CameraClient> client = static_cast<CameraClient*>(getClientFromCookie(user).get());
+    if (client.get() == nullptr) return;
+
+    if (!client->lockIfMessageWanted(msgType)) return;
+    if (dataPtr == 0 && metadata == NULL) {
+        ALOGE("Null data returned in data callback");
+        client->handleGenericNotify(CAMERA_MSG_ERROR, UNKNOWN_ERROR, 0);
+        return;
+    }
 #ifdef MTK_HARDWARE
     if (msgType == 0x80000000) { //MTK_CAMERA_MSG_EXT_DATA
         struct DataHeader {
-            uint32_t        extMsgType;
+            int        extMsgType;
         } dataHeader;
         sp<IMemoryHeap> heap = 0;
         ssize_t         offset = 0;
@@ -855,16 +864,6 @@ void CameraClient::dataCallback(int32_t msgType,
         LOG2("MtkDataCallback(0x%x)", dataHeader.extMsgType);
     }
 #endif
-
-    sp<CameraClient> client = static_cast<CameraClient*>(getClientFromCookie(user).get());
-    if (client.get() == nullptr) return;
-
-    if (!client->lockIfMessageWanted(msgType)) return;
-    if (dataPtr == 0 && metadata == NULL) {
-        ALOGE("Null data returned in data callback");
-        client->handleGenericNotify(CAMERA_MSG_ERROR, UNKNOWN_ERROR, 0);
-        return;
-    }
 
     switch (msgType & ~CAMERA_MSG_PREVIEW_METADATA) {
         case CAMERA_MSG_PREVIEW_FRAME:

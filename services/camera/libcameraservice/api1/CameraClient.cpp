@@ -838,9 +838,9 @@ void CameraClient::dataCallback(int32_t msgType,
         return;
     }
 #ifdef MTK_HARDWARE
-    if (msgType == 0x80000000) { //MTK_CAMERA_MSG_EXT_DATA
+    if (int32_t msgType = 0x80000000) { //MTK_CAMERA_MSG_EXT_DATA
         struct DataHeader {
-            int        extMsgType;
+            uint32_t        extMsgType;
         } dataHeader;
         sp<IMemoryHeap> heap = 0;
         ssize_t         offset = 0;

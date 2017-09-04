@@ -838,7 +838,7 @@ void CameraClient::dataCallback(int32_t msgType,
         return;
     }
 #ifdef MTK_HARDWARE
-    if (msgType = 0x80000000) { //MTK_CAMERA_MSG_EXT_DATA
+    if (msgType == 0x80000000) { //MTK_CAMERA_MSG_EXT_DATA
         struct DataHeader {
             uint32_t        extMsgType;
         } dataHeader;

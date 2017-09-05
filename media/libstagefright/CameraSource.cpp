@@ -1168,10 +1168,13 @@ void CameraSource::releaseRecordingFrameHandle(native_handle_t* handle) {
         int64_t token = IPCThreadState::self()->clearCallingIdentity();
         mCamera->releaseRecordingFrameHandle(handle);
         IPCThreadState::self()->restoreCallingIdentity(token);
-    } else {
+    } 
+#ifndef MTK_HARDWARE
+    else {
         native_handle_close(handle);
         native_handle_delete(handle);
     }
+#endif
 }
 
 void CameraSource::recordingFrameHandleCallbackTimestamp(int64_t timestampUs,
@@ -1308,7 +1311,7 @@ MetadataBufferType CameraSource::metaDataStoredInVideoBuffers() const {
     // Output buffers will contain metadata if camera sends us buffer in metadata mode or via
     // buffer queue.
     switch (mVideoBufferMode) {
-#ifndef EXYNOS4_ENHANCEMENTS
+#ifndef MTK_HARDWARE
         case hardware::ICamera::VIDEO_BUFFER_MODE_DATA_CALLBACK_METADATA:
             return kMetadataBufferTypeNativeHandleSource;
 #endif

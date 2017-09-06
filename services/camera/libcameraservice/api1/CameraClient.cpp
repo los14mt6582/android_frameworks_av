@@ -525,7 +525,7 @@ void CameraClient::releaseRecordingFrameHandle(native_handle_t *handle) {
 
     mHardware->releaseRecordingFrame(dataPtr);
 
-#ifndef MTK_HARDWARE
+#ifdef CAMERASERVICE_CLOSES_NATIVE_HANDLES
     native_handle_close(handle);
     native_handle_delete(handle);
 #endif

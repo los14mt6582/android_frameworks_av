@@ -97,9 +97,6 @@ protected:
             const char *mimeType,
             OMX_U32 minCompressionRatio = 1u);
 
-    // For MTK blob compatibility
-    virtual void updatePortDefinitions(bool updateCrop = true);
-
     virtual void updatePortDefinitions(bool updateCrop = true, bool updateInputSize = false);
 
     uint32_t outputBufferWidth();

@@ -26,6 +26,7 @@
 #include <utils/RefBase.h>
 #include <audio_utils/roundup.h>
 #include <media/AudioResamplerPublic.h>
+#include <media/AudioTimestamp.h>
 #include <media/Modulo.h>
 #include <media/SingleStateQueue.h>
 
@@ -118,6 +119,8 @@ struct AudioTrackSharedStatic {
 
 typedef SingleStateQueue<AudioPlaybackRate> PlaybackRateQueue;
 
+typedef SingleStateQueue<ExtendedTimestamp> ExtendedTimestampQueue;
+
 // ----------------------------------------------------------------------------
 
 // Important: do not add any virtual methods, including ~
@@ -170,6 +173,9 @@ private:
                 uint16_t    mSendLevel;      // Fixed point U4.12 so 0x1000 means 1.0
 
                 uint16_t    mPad2;           // unused
+
+                // server write-only, client read
+                ExtendedTimestampQueue::Shared mExtendedTimestampQueue;
 
                 // This is set by AudioTrack.setBufferSizeInFrames().
                 // A write will not fill the buffer above this limit.
@@ -453,6 +459,16 @@ public:
         : ClientProxy(cblk, buffers, frameCount, frameSize,
             false /*isOut*/, false /*clientInServer*/) { }
     ~AudioRecordClientProxy() { }
+
+    // Advances the client read pointer to the server write head pointer
+    // effectively flushing the client read buffer. The effect is
+    // instantaneous. Returns the number of frames flushed.
+    uint32_t    flush() {
+        int32_t rear = android_atomic_acquire_load(&mCblk->u.mStreaming.mRear);
+        int32_t front = mCblk->u.mStreaming.mFront;
+        android_atomic_release_store(rear, &mCblk->u.mStreaming.mFront);
+        return (Modulo<int32_t>(rear) - front).unsignedValue();
+    }
 };
 
 // ----------------------------------------------------------------------------
@@ -499,7 +515,7 @@ public:
     virtual void        releaseBuffer(Buffer* buffer);
 
     // Return the total number of frames that AudioFlinger has obtained and released
-    virtual size_t      framesReleased() const { return mCblk->mServer; }
+    virtual int64_t     framesReleased() const { return mReleased; }
 
     // Expose timestamp to client proxy. Should only be called by a single thread.
     virtual void        setTimestamp(const ExtendedTimestamp &timestamp) {
@@ -523,6 +539,7 @@ public:
 protected:
     size_t      mAvailToClient; // estimated frames available to client prior to releaseBuffer()
     int32_t     mFlush;         // our copy of cblk->u.mStreaming.mFlush, for streaming output only
+    int64_t     mReleased;      // our copy of cblk->mServer, at 64 bit resolution
     int64_t     mFlushed;       // flushed frames to account for client-server discrepancy
     ExtendedTimestampQueue::Mutator mTimestampMutator;
 };

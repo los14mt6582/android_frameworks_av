@@ -54,6 +54,11 @@ public:
             void        handleSyncStartEvent(const sp<SyncEvent>& event);
             void        clearSyncStartEvent();
 
+            void        updateTrackFrameInfo(int64_t trackFramesReleased,
+                                             int64_t sourceFramesRead,
+                                             uint32_t halSampleRate,
+                                             const ExtendedTimestamp &timestamp);
+
     virtual bool        isFastTrack() const { return (mFlags & AUDIO_INPUT_FLAG_FAST) != 0; }
 
 private:
